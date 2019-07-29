@@ -1,6 +1,9 @@
 import React, { Component } from 'react'
-import { MDBBtn, MDBDataTable } from 'mdbreact';
-//import axios from 'axios';
+import { MDBDataTable } from 'mdbreact';
+import AddEdit from './addEdit';
+import Delete from './delete';
+import axios from 'axios';
+import { API } from '../config/config'
 
 export class table extends Component {
     constructor(props) {
@@ -8,54 +11,71 @@ export class table extends Component {
     
         this.state = {
              user:[],             
-             column: [
+             column: [                
                 {
-                    label: 'ID',
-                    field: 'id',
-                    sort: 'asc'
+                    label: 'Email',
+                    field: 'email',
+                    sort: 'asc',
+                                      
                 },
                 {
                     label: 'Username',
                     field: 'username',
-                    sort: 'asc'
-                },
-                {
-                    label: 'Email',
-                    field: 'email',
-                    sort: 'asc'                    
-                },
-                {
-                    label: 'Password',
-                    field:'password',
-                    sort: 'asc',                    
-                },
+                    sort: 'asc',
+                    
+                }, 
                 {
                     label: 'Action',
-                    field:'action',               
+                    field:'action',
+                    width: '100px'                                     
+                },              
+                // {
+                //     label: 'Password',
+                //     field:'password',
+                //     sort: 'asc',
                                       
-                },
-                
+                // },
+                               
               ]    
         }
     }     
-    edit(id){
-        console.log(id)
-    }
-    getTable(){
-        this.setState();
-
-         fetch('http://localhost:9090/User/getUsers')
-        .then(response => response.json())
-        .then(data => this.setState({user: data}))
-        const data = [];
+    getDataFromApi = () => {
+        axios.get(`${API.USER_API}`).then(response => {
+          this.setState({
+            user: response.data
+          });
+        });        
+    };       
+    componentDidMount(){
+        this.getDataFromApi();
+        console.log(API.USER_API)
+    } 
+    
+    deleteUser = (user) => {
+        axios.delete(`${API.USER_API}/${user.id}`)
+        .then(res => {            
+            this.getDataFromApi();
+            alert("User deleted");
+        })        
+    }  
+    getArrangedDataForTable = () => {
+        const data = [];  
         
         this.state.user.map((user) =>                         
-            data.push({
-                id : user.id , 
-                username : user.username , 
-                password : user.password,  
-                email : user.email,
-                edit: <p><MDBBtn color="blue" size="sm" onClick={() => this.edit(user.id)}>Edit</MDBBtn><MDBBtn color="purple" size="sm">Delete</MDBBtn></p>,
+            data.push({  
+                                   
+                
+                email: user.email,                           
+                username : user.username ,                 
+                // password : user.password,               
+                action :  
+                <div className="col-button">
+                    
+                    <AddEdit action="edit" id={user} data={this.getDataFromApi}/>
+                    
+                    <Delete action="edit" id={user} data={this.deleteUser}/>           
+                    
+                </div>,
                 
             })
         )
@@ -65,17 +85,18 @@ export class table extends Component {
     render() {     
         
         return(
-            <div>                
+            <div>   
+                 <div className="div-add">
+                    < AddEdit data={this.getDataFromApi}/> 
+                </div>                           
                 <MDBDataTable btn 
                     striped
                     bordered
                     small
-                    data={this.getTable()}
-                    />     
-                
+                    data={this.getArrangedDataForTable()}
+                    />                 
             </div>
-        )
-        
+        )        
     }
 }
 
